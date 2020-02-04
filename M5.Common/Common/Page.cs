@@ -79,12 +79,15 @@ namespace M5.Common
         public static Uri Url(this HttpRequest request)
         {
             int? port = request.Host.Port;
-            string webhost = "http://"+ request.Host.ToString();
+            string host = request.Host.ToString();
+            if (request.Headers.ContainsKey("Host")) host = request.Headers["Host"];
+            string webhost = request.Scheme + "://" + host;
+            /*
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 if (port == null) port = request.HttpContext.Connection.LocalPort;// int.Parse(ConfigurationManager.AppSettings["Port"]);
                 webhost = request.Scheme + "://" + request.HttpContext.Connection.LocalIpAddress + (port == 80 ? "" : ":" + port.ToString());
-            }
+            }*/
             return new Uri(webhost + request.Path);
             //return new Uri(request.Scheme+"://"+request.Host.Host+(port == 80?"" : ":"+ port.ToString()) + request.Path);
         }

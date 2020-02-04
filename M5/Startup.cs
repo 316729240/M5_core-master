@@ -71,7 +71,6 @@ namespace M5.Main
             {
                 // WebService.HttpContext = context;
                 //await 
-
                 service.BeginRequest(context);
             });
         }

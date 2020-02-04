@@ -728,6 +728,7 @@ namespace M5.Common
                     value.all = value.all | (rs.GetInt32(4) > 0);
                 }
             }
+            rs.Close();
             if (value.all) value.read = value.write = value.audit = true;
             return value;
         }

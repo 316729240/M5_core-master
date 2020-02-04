@@ -1,18 +1,10 @@
-﻿using Helper;
-using M5.Common;
+﻿using M5.Common;
 using MWMS.DAL;
 using MWMS.Helper.Extensions;
-using MWMS.SqlHelper;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Web;
 using System.Xml;
-
 namespace MWMS.Template
 {
     public class PageTemplate : Template
@@ -124,12 +116,16 @@ namespace MWMS.Template
         /// <param name="isMobile"></param>
         void GetContentTemplate(string url, bool isMobile)
         {
+            Console.WriteLine(url);
             //url = url.Replace("." + BaseConfig.extension, "");
             double dataTypeId = 0, rootId = 0, moduleId = 0, skinId = 0, id = 0, classId = 0;
             TableHandle table = new TableHandle("maintable");
             Dictionary<string, object> p = new Dictionary<string, object>();
             p.Add("url", url);
-            Dictionary<string, object> variable = table.GetModel("dataTypeId,classId,id,skinId,moduleId, rootId", "url=@url and orderId>-1", p);
+            Dictionary<string, object> variable = DAL.DAL.M("maintable").Field("dataTypeId,classId,id,skinId,moduleId, rootId").Where(new object[,] {
+                { "url","=",url},
+                { "orderId",">",-1}
+            }).Find();
             if (variable == null) throw new Exception("访问数据不存在");
             moduleId = (double)variable["moduleId"];
             rootId = (double)variable["rootId"];
@@ -137,50 +133,17 @@ namespace MWMS.Template
             skinId = (double)variable["skinId"];
             id = (double)variable["id"];
             classId = (double)variable["classId"];
-            MySqlDataReader rs = null;
             if (skinId == 0)
             {
-                rs = Sql.ExecuteReader("select " + (isMobile ? "_contentSkinID" : "contentSkinID") + " from class where id=@id", new MySqlParameter[] { new MySqlParameter("id", classId) });
-                if (rs.Read())
+                Dictionary<string, object> rs = DAL.DAL.M("class").Field((isMobile ? "_contentSkinID" : "contentSkinID")+ " contentSkinID").Get(classId);
+                if (rs != null)
                 {
-                    skinId = rs.IsDBNull(0) ? 0 : rs.GetDouble(0);
+                    skinId = rs["contentSkinID"].ToDouble();
                 }
-                rs.Close();
             }
             DAL.Datatype.TableHandle T = new DAL.Datatype.TableHandle(dataTypeId);
             variable = T.GetModel(id);
             variable["attribute"] = "";
-            /*
-            string tableName = (string)Helper.Sql.ExecuteScalar("select tableName from datatype where id=" + dataTypeId.ToString());
-            rs = Helper.Sql.ExecuteReader("select * from " + tableName + " where id=@id", new MySqlParameter[] {
-                    new MySqlParameter("id",id)});
-            if (rs.Read())
-            {
-                for (int i = 0; i < rs.FieldCount; i++)
-                {
-                    string fieldName = rs.GetName(i);
-
-                    if (rs.IsDBNull(i))
-                    {
-                        variable[rs.GetName(i)] = "";
-                    }
-                    else
-                    {
-                        if (rs.GetDataTypeName(rs.GetOrdinal(fieldName)) == "ntext")
-                        {
-                            //SystemLink v1 = new SystemLink();
-                            string FieldValue = rs[i] + "";
-                            //FieldValue = v1.Replace(FieldValue);
-                            variable[fieldName] = FieldValue;
-                        }
-                        else
-                        {
-                            variable[fieldName] = rs[i];
-                        }
-                    }
-                }
-            }
-            rs.Close();*/
             this.Variable = variable;
             if (skinId > 0)
             {
@@ -363,17 +326,19 @@ namespace MWMS.Template
         {
             Save();
             Dictionary<string, object> fields = new Dictionary<string, object>();
-            fields["id"] = this.TemplateId;
+            //fields["id"] = this.TemplateId;
             fields["title"] = this.TemplateName;
             fields["u_type"] = (int)this.TemplateType;
             fields["u_defaultFlag"] = this.IsDefault ? 1 : 0;
             fields["classId"] = this.ColumnId;
             fields["u_datatypeId"] = this.DatatypeId;
-            fields["u_editboxStatus"] = (int)this.EditMode;
-            fields["u_parameterValue"] = this.ParameterValue;
+            //fields["u_editboxStatus"] = (int)this.EditMode;
+            //fields["u_parameterValue"] = this.ParameterValue;
             fields["u_webFAid"] = this.IsMobile ? 1 : 0;
-            TableHandle table = new TableHandle("template_backup");
-            int count = table.Count("classid=@classid and u_type=@u_type and u_webFAid=@u_webFAid and u_defaultFlag=@u_defaultFlag and u_datatypeId=@u_datatypeId and title=@title and  '"+DateTime.Now.AddMinutes(-200)+ "'<updatedate", fields);
+            fields["updatedate"] = new object[] {">", DateTime.Now.AddMinutes(-200) };
+            int count = DAL.DAL.M("template_backup").Where(fields).Count();
+            //TableHandle table = new TableHandle("template_backup");
+            //int count = table.Count("classid=@classid and u_type=@u_type and u_webFAid=@u_webFAid and u_defaultFlag=@u_defaultFlag and u_datatypeId=@u_datatypeId and title=@title and  '"+DateTime.Now.AddMinutes(-200)+ "'<updatedate", fields);
             if (count == 0) this.Backup(username);
         }
         /// <summary>

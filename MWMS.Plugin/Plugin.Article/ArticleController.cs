@@ -23,7 +23,7 @@ namespace MWMS.Plugin
         {
             ReturnValue info = new ReturnValue();
             Dictionary<string, object> data = Sql.ExecuteDictionary("select A.title,A.classId,A.skinId,A.url,A.pic,B.* from maintable A inner join  article B on A.id=B.id where A.id=@id", new MySqlParameter[] { new MySqlParameter("id", id) });
-            if(data.ContainsKey("url"))data["url"] = TemplateEngine._replaceUrl(Config.webPath + data["url"].ToString() + "." + BaseConfig.extension);
+            if(data.ContainsKey("url"))data["url"] = Config.webPath + data["url"].ToString() + "." + BaseConfig.extension;
             info.userData = data;
             return info;
         }

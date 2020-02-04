@@ -262,7 +262,6 @@ namespace M5.Common
         static ConfigurationManager()
         {
             AppSettings = new ConfigurationBuilder()
-                  .SetBasePath(System.IO.Directory.GetCurrentDirectory()) 
                   .SetBasePath(System.IO.Directory.GetCurrentDirectory())
                   .Add(new JsonConfigurationSource
                   {

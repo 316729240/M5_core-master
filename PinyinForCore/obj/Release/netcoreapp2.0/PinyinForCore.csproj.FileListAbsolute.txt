@@ -12,3 +12,11 @@ E:\project\M5_core\M5_core\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore
 E:\project\M5_core\M5_core\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.AssemblyInfo.cs
 E:\project\M5_core\M5_core\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.dll
 E:\project\M5_core\M5_core\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.pdb
+E:\web\M5_core-master\PinyinForCore\bin\Release\netcoreapp2.0\PinyinForCore.deps.json
+E:\web\M5_core-master\PinyinForCore\bin\Release\netcoreapp2.0\PinyinForCore.dll
+E:\web\M5_core-master\PinyinForCore\bin\Release\netcoreapp2.0\PinyinForCore.pdb
+E:\web\M5_core-master\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.csprojAssemblyReference.cache
+E:\web\M5_core-master\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.AssemblyInfoInputs.cache
+E:\web\M5_core-master\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.AssemblyInfo.cs
+E:\web\M5_core-master\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.dll
+E:\web\M5_core-master\PinyinForCore\obj\Release\netcoreapp2.0\PinyinForCore.pdb

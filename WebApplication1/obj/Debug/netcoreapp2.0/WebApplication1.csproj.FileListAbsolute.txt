@@ -34,3 +34,16 @@ E:\project\M5_core\M5_core\WebApplication1\obj\Debug\netcoreapp2.0\WebApplicatio
 E:\project\M5_core\M5_core\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.AssemblyInfo.cs
 E:\project\M5_core\M5_core\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.dll
 E:\project\M5_core\M5_core\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.pdb
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\appsettings.Development.json
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\appsettings.json
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\Properties\launchSettings.json
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\WebApplication1.deps.json
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\WebApplication1.runtimeconfig.json
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\WebApplication1.runtimeconfig.dev.json
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\WebApplication1.dll
+E:\web\M5_core-master\WebApplication1\bin\Debug\netcoreapp2.0\WebApplication1.pdb
+E:\web\M5_core-master\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.csprojAssemblyReference.cache
+E:\web\M5_core-master\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.AssemblyInfoInputs.cache
+E:\web\M5_core-master\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.AssemblyInfo.cs
+E:\web\M5_core-master\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.dll
+E:\web\M5_core-master\WebApplication1\obj\Debug\netcoreapp2.0\WebApplication1.pdb

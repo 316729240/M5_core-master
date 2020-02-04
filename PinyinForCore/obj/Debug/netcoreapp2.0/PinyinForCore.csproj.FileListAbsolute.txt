@@ -24,7 +24,6 @@ E:\project\M5_core\M5_core\PinyinForCore\obj\Debug\netcoreapp2.0\PinyinForCore.p
 E:\web\M5_core-master\PinyinForCore\bin\Debug\netcoreapp2.0\PinyinForCore.deps.json
 E:\web\M5_core-master\PinyinForCore\bin\Debug\netcoreapp2.0\PinyinForCore.dll
 E:\web\M5_core-master\PinyinForCore\bin\Debug\netcoreapp2.0\PinyinForCore.pdb
-E:\web\M5_core-master\PinyinForCore\obj\Debug\netcoreapp2.0\PinyinForCore.csprojAssemblyReference.cache
 E:\web\M5_core-master\PinyinForCore\obj\Debug\netcoreapp2.0\PinyinForCore.AssemblyInfoInputs.cache
 E:\web\M5_core-master\PinyinForCore\obj\Debug\netcoreapp2.0\PinyinForCore.AssemblyInfo.cs
 E:\web\M5_core-master\PinyinForCore\obj\Debug\netcoreapp2.0\PinyinForCore.dll

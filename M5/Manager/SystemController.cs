@@ -442,7 +442,6 @@ p.read = true;
                 {
                     p = loginInfo.value.getColumnPermissions(classId);
                 }
-                //如果有该栏目的读取权限时列出子栏目
                 if (p.read)
                 {
                     ArrayList list = Sql.ExecuteArray("select id,classId,className text,moduleId,case when orderid<0 then 'M5_Del' end  class,saveDataType dataTypeId from class where  moduleId=@moduleId and classId=@classId order by orderid",
@@ -450,6 +449,7 @@ p.read = true;
                         new MySqlParameter("moduleId",moduleId),
                         new MySqlParameter("classId",classId)
                 });
+                //如果有该栏目的读取权限时列出子栏目
                     for (int i = 0; i<list.Count; i++)
                     {
                         Dictionary<string, object> obj = (Dictionary<string, object>)list[i];

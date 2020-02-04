@@ -102,6 +102,8 @@ namespace MWMS.Helper
         /// <param name="data">变量名</param>
         public static void writeObjectFile(string file, object data)
         {
+            System.IO.FileInfo f = new System.IO.FileInfo(file);
+            if (!f.Directory.Exists) f.Directory.Create();
             IFormatter formatter = new BinaryFormatter();
             Stream stream = new FileStream(file, FileMode.OpenOrCreate, FileAccess.Write, FileShare.ReadWrite);
             formatter.Serialize(stream, data);

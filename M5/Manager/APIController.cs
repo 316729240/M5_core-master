@@ -13,8 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using MWMS;
 using MWMS.Helper.Extensions;
 using MWMS.Helper;
-using MWMS.SqlHelper;
-using MySql.Data.MySqlClient;
+using MWMS.DAL;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -79,13 +78,11 @@ string[] file = new string[f.Length];
         }
         public ReturnValue getDataUrl(double id)
         {
-ReturnValue info = new ReturnValue();
-MySqlDataReader rs1 = Sql.ExecuteReader("select url from maintable where id=@id", new MySqlParameter[]{
-                new MySqlParameter("id",id)
-            });
-            if (rs1.Read())
+            ReturnValue info = new ReturnValue();
+            var mainTable=DAL.M("maintable").Field("url").Get(id);
+            if (mainTable!=null)
             {
-                info.userData =TemplateEngine._replaceUrl(Config.webPath + rs1[0] + "." + BaseConfig.extension);
+                info.userData =Config.webPath + mainTable["url"] + "." + BaseConfig.extension;
             }
             else
             {

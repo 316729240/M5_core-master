@@ -1,5 +1,7 @@
 ﻿using MWMS;
+using MWMS.DAL;
 using MWMS.Helper;
+using MWMS.Helper.Extensions;
 using MWMS.SqlHelper;
 using MySql.Data.MySqlClient;
 using System;
@@ -11,7 +13,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-
+using MWMS.DAL;
 namespace M5.Common
 {
     public class ColumnClass
@@ -27,20 +29,19 @@ namespace M5.Common
             double rootId = 0;
             double moduleId = 0;
             double userId = 0;
-            MySqlDataReader rs = Sql.ExecuteReader("select childId,classId,parentId,dirname,className,rootid,moduleId,userId from class where id=@id", new MySqlParameter[] { new MySqlParameter("id", id) });
-            if (rs.Read())
+            Dictionary<string, object> data= DAL.M("class").Field("childId,classId,parentId,dirName,className,rootId,moduleId,userId").Get(id);
+            if (data != null)
             {
+                childId = data["childId"].ToString();
+                classId = data["classId"].ToDouble();
+                parentId = data["parentId"].ToString();
+                dirName = data["dirName"].ToString();
+                className = data["className"].ToString();
+                rootId = data["rootId"].ToDouble();
+                moduleId = data["moduleId"].ToDouble();
+                userId = data["userId"].ToDouble();
 
-                childId = rs[0].ToString();
-                classId = rs.GetDouble(1);
-                parentId = rs[2].ToString();
-                dirName = rs[3].ToString();
-                className = rs[4].ToString();
-                rootId = rs.GetDouble(5);
-                moduleId = rs.GetDouble(6);
-                userId = rs.GetDouble(7);
             }
-            rs.Close();
             if (childId == null)
             {
                 err.errNo = -1;
@@ -58,6 +59,26 @@ namespace M5.Common
             }
             if ((p.write & p.delete && userId == user.id) | p.all)//有上级栏目决定权限
             {
+                List<Dictionary<string,object>> list= DAL.M("class").Field("savedatatype,id").Where("id in (" + childId + ")").Select();
+                for(int i = 0; i < list.Count; i++)
+                {
+                    Dictionary<string,object> datatype_data= DAL.M("datatype").Field("tablename").Get(list[i]["savedatatype"].ToDouble());
+                    if (datatype_data != null)
+                    {
+                        DAL.M(datatype_data["tablename"].ToString())
+                            .Where("id in (select id from maintable where classid="+ list[i]["id"].ToString()+ ")")
+                            .Delete();
+                        DAL.M("maintable")
+                            .Where(new Dictionary<string, object>()
+                                    {
+                                        { "classid",list[i]["id"]}
+                                    })
+                            .Delete();
+                        //Sql.ExecuteNonQuery("delete from " + datatype_data["tablename"] + " where id in (select id from maintable where classid=@id )", new MySqlParameter[] { new MySqlParameter("id", rs.GetDouble(1)) });
+                        //Sql.ExecuteNonQuery("delete from maintable where classid=@id", new MySqlParameter[] { new MySqlParameter("id", rs.GetDouble(1)) });
+                    }
+                }
+                /*
                 rs = Sql.ExecuteReader("select savedatatype,id from class where  id in (" + childId + ")");
                 while (rs.Read())
                 {
@@ -68,8 +89,8 @@ namespace M5.Common
                         Sql.ExecuteNonQuery("delete from maintable where classid=@id", new MySqlParameter[] { new MySqlParameter("id", rs.GetDouble(1)) });
                     }
                 }
-                rs.Close();
-                int Count = Sql.ExecuteNonQuery("delete from class where id in (" + childId + ")");
+                rs.Close();*/
+                int Count = DAL.M("class").Where("id in (" + childId + ")").Delete();
                 if (Count > 0)
                 {
                     if (classId != 7)
@@ -78,8 +99,9 @@ namespace M5.Common
                     }
                     else
                     {
-                        Sql.ExecuteNonQuery("delete from htmltemplate where classid=@id",
-                            new MySqlParameter[] { new MySqlParameter("id", id) });
+                        DAL.M("class").Where(new Dictionary<string, object> {
+                            { "classId",id }
+                        }).Delete();
                     }
                 }
                 err.errNo = 0;
@@ -96,64 +118,65 @@ namespace M5.Common
         public static ColumnInfo get(double id)
         {
             ColumnInfo value = null;
-            MySqlDataReader rs = Sql.ExecuteReader("select id,classId,moduleId,rootId,className,pddir,dirName,dirPath,layer,parentId,keyword,info,maxico,saveDataType,skinId,contentSkinId,_skinId,_contentSkinId,custom,thumbnailWidth,thumbnailHeight,thumbnailForce,saveRemoteImages,inherit,domainName,titleRepeat,watermark,_domainName from class where  id=@id", new MySqlParameter[] { new MySqlParameter("id", id) });
-            if (rs.Read())
+            Dictionary<string,object> data= DAL.M("class").Field("id,classId,moduleId,rootId,className,pddir,dirName,dirPath,layer,parentId,keyword,info,maxico,saveDataType,skinId,contentSkinId,_skinId,_contentSkinId,custom,thumbnailWidth,thumbnailHeight,thumbnailForce,saveRemoteImages,inherit,domainName,titleRepeat,watermark,_domainName").Get(id);
+            if (data!=null)
             {
+
                 value = new ColumnInfo();
-                value.id = rs.GetDouble(0);
-                value.classId = rs.GetDouble(1);
-                value.rootId = rs.GetDouble(3);
-                value.moduleId = rs.GetDouble(2);
-                value.className = rs[4] + "";
-                value.pddir = rs[5] + "";
-                value.dirName = rs[6] + "";
-                value.dirPath = rs[7] + "";
-                value.layer = rs.GetInt32(8);
-                value.parentId = rs[9] + "";
-                value.keyword = rs[10] + "";
-                value.info = rs[11] + "";
-                value.maxIco = rs[12] + "";
-                value.saveDataType = rs.GetDouble(13);
+                value.id = data["id"].ToDouble();
+                value.classId = data["classId"].ToDouble();
+                value.rootId = data["rootId"].ToDouble();
+                value.moduleId = data["moduleId"].ToDouble();
+                value.className = data["className"].ToString();
+                value.pddir = data["pddir"].ToString();
+                value.dirName = data["dirName"].ToString();
+                value.dirPath = data["dirPath"].ToString();
+                value.layer = data["moduleId"].ToInt();
+                value.parentId = data["parentId"].ToString();
+                value.keyword = data["keyword"].ToString();
+                value.info = data["info"].ToString();
+                value.maxIco = data["maxico"].ToString();
+                value.saveDataType = data["saveDataType"].ToDouble();
 
-                value.skinId = rs.IsDBNull(14) ? 0 : rs.GetDouble(14);
-                value.contentSkinId = rs.IsDBNull(15) ? 0 : rs.GetDouble(15);
+                value.skinId = data["skinId"].ToDouble();
+                value.contentSkinId = data["contentSkinId"].ToDouble();
 
-                value._skinId = rs.IsDBNull(16) ? 0 : rs.GetDouble(16);
-                value._contentSkinId = rs.IsDBNull(17) ? 0 : rs.GetDouble(17);
+                value._skinId = data["_skinId"].ToDouble();
+                value._contentSkinId = data["_contentSkinId"].ToDouble();
 
-                value.custom = rs[18] + "";
-                value.thumbnailWidth = rs.GetInt32(19);
-                value.thumbnailHeight = rs.GetInt32(20);
-                value.thumbnailForce = rs.GetInt32(21);
-                value.saveRemoteImages = rs.GetInt32(22);
-                value.watermark = (rs.IsDBNull(26) || rs.GetInt32(26) == 1) ? 1 : 0;
-                value.inherit = rs.GetInt32(23);
-                value.domainName = rs[24] + "";
-                value.titleRepeat = (rs.IsDBNull(25) || rs.GetInt32(25) == 1) ? 1 : 0;
-
-                value._domainName = rs[27] + "";
+                value.custom = data["custom"].ToString();
+                value.thumbnailWidth = data["thumbnailWidth"].ToInt();
+                value.thumbnailHeight = data["thumbnailHeight"].ToInt();
+                value.thumbnailForce = data["thumbnailForce"].ToInt();
+                value.saveRemoteImages = data["saveRemoteImages"].ToInt();
+                value.watermark = data["watermark"].ToInt();
+                value.inherit = data["inherit"].ToInt();
+                value.domainName = data["domainName"].ToString();
+                value.titleRepeat = data["titleRepeat"].ToInt();
+                value._domainName = data["_domainName"].ToString();
             }
-            rs.Close();
             return value;
         }
         public static ReturnValue editDirName(double id, string dirName, UserInfo user)
         {
             ReturnValue err = new ReturnValue();
             ColumnInfo info = ColumnClass.get(id);
-            int count = int.Parse( Sql.ExecuteScalar("select count(1) from class where id<>@id and classId=@classId and dirName=@dirName", new MySqlParameter[]{
-                new MySqlParameter("id",info.id),
-                new MySqlParameter("classId",info.classId),
-                new MySqlParameter("dirName",dirName.ToLower())
-            }).ToString());
+            int count=DAL.M("class").Where(new object [,]{
+                {"id","<>",info.id },
+                { "classId","=",info.classId},
+                { "dirName","=",dirName.ToLower()},
+            }).Count();
             if (count > 0)
             {
                 err.errNo = -1;
                 err.errMsg = "所在栏目下目录名已存在";
                 return err;
             }
-            Sql.ExecuteNonQuery("update class set dirName=@dirName where id=@id", new MySqlParameter[]{
-                new MySqlParameter("id",id),
-                new MySqlParameter("dirName",dirName)});
+            DAL.M("class").Where(new object[,]{
+                {"id","=",id }
+            }).Update(new Dictionary<string, object> {
+                { "dirName",dirName}
+            });
             return err;
         }
         public static void reset(double dataId, double rootId)

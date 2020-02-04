@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using MWMS.DAL;
-using System.Data.SqlClient;
-using Helper;
-using MWMS.SqlHelper;
 using MWMS.Helper;
-using MySql.Data.MySqlClient;
 
 namespace MWMS.Template
 {
@@ -71,18 +67,11 @@ namespace MWMS.Template
         //public abstract void Backup();
         public void Remove()
         {
-            if (TemplateType == TemplateType.视图)
-            {
-                Sql.ExecuteNonQuery("delete  from template_view where id=@id", new MySqlParameter[] {
-                    new MySqlParameter("id",TemplateId)
-                });
-            }
-            else
-            {
-                Sql.ExecuteNonQuery("delete  from template where id=@id", new MySqlParameter[] {
-                    new MySqlParameter("id",TemplateId)
-                });
-            }
+            string tableName = "template";
+            if (TemplateType == TemplateType.视图) tableName = "template_view";
+            DAL.DAL.M(tableName).Where(new Dictionary<string, object>(){
+                    { "id",TemplateId}
+            }).Delete();
         }
         /// <summary>
         /// 备份模板
@@ -93,35 +82,36 @@ namespace MWMS.Template
 
             if (TemplateType == TemplateType.视图)
             {
-                Sql.ExecuteNonQuery("insert into template_backup (id,dataId,u_content,updatedate,username,title,classid)" +
-                    "select @id,@dataId,u_html,@updatedate,@username,title,classid from template_view where id=@dataId", new MySqlParameter[]{
-                 new MySqlParameter("id",double.Parse(Tools.GetId())),
-                 new MySqlParameter("dataId",this.TemplateId),
-                 new MySqlParameter("username",username),
-                 new MySqlParameter("updatedate",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")),
-                });
+                DAL.DAL.ExecuteNonQuery("insert into template_backup (id,dataId,u_content,updatedate,username,title,classid)" +
+                    "select @id,@dataId,u_html,@updatedate,@username,title,classid from template_view where id=@dataId",
+                    new Dictionary<string, object>() {
+                        { "id",double.Parse(Tools.GetId())},
+                         {"dataId",this.TemplateId },
+                         {"username",username},
+                         {"updatedate",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},
+                    }
+                    );
             }
             else
             {
-                Sql.ExecuteNonQuery("insert into template_backup (id,dataId,classId,u_type,title,u_content,updateDate,userName,u_webFAid,u_defaultflag,u_datatypeId)" +
-"select @id,B.id,B.classid,B.u_type,B.title,B.u_content,@updatedate,@username,B.u_webFAid,B.u_defaultflag,u_datatypeId from template B  " +
-" where B.id=@dataId", new MySqlParameter[]{
-                 new MySqlParameter("id",double.Parse(Tools.GetId())),
-                 new MySqlParameter("dataId",this.TemplateId),
-                 new MySqlParameter("username",username),
-                 new MySqlParameter("updatedate",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")),
-});
+                DAL.DAL.ExecuteNonQuery("insert into template_backup (id,dataId,classId,u_type,title,u_content,updateDate,userName,u_webFAid,u_defaultflag,u_datatypeId)" +
+                    "select @id,B.id,B.classid,B.u_type,B.title,B.u_content,@updatedate,@username,B.u_webFAid,B.u_defaultflag,u_datatypeId from template B  " +
+                    " where B.id=@dataId", new Dictionary<string, object>() {
+                                     {"id",double.Parse(Tools.GetId()) },
+                                     {"dataId",this.TemplateId},
+                                     {"username",username},
+                                     {"updatedate",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},
+                    });
             }
         }
         public static void Backup(double templateId, string html, string username)
         {
-            Sql.ExecuteNonQuery("insert into template_backup (id,dataId,u_content,updateDate,userName)" +
-"values(@id,@dataId,@u_content,@updatedate,@username)  ", new MySqlParameter[]{
-                 new MySqlParameter("id",double.Parse(Tools.GetId())),
-                 new MySqlParameter("dataId",templateId),
-                 new MySqlParameter("u_content",html),
-                 new MySqlParameter("username",username),
-                 new MySqlParameter("updatedate",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")),
+            DAL.DAL.M("template_backup").Insert(new Dictionary<string, object> {
+                 {"id",double.Parse(Tools.GetId()) },
+                 {"dataId",templateId},
+                 {"u_content",html},
+                 {"username",username},
+                 {"updatedate",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")},
             });
         }
         /// <summary>

@@ -202,15 +202,19 @@ namespace M5.Common
             }
             ColumnInfo channel = ColumnClass.get(column.rootId);
             StringBuilder url = new StringBuilder(BaseConfig.contentUrlTemplate);
-            url.Replace("$id", "'+convert(varchar(20),convert(decimal(18,0),id))+'");
+            /*url.Replace("$id", "'+convert(varchar(20),convert(decimal(18,0),id))+'");
             url.Replace("$create.year", "'+convert(varchar(4),year(createdate))+'");
             url.Replace("$create.month", "'+right('00'+cast(month(createdate) as varchar),2)+'");
-            url.Replace("$create.day", "'+right('00'+cast(day(createdate) as varchar),2)+'");
+            url.Replace("$create.day", "'+right('00'+cast(day(createdate) as varchar),2)+'");*/
+            url.Replace("$id", "',id,'");
+            url.Replace("$create.year", "',DATE_FORMAT(createdate,'%Y'),'");
+            url.Replace("$create.month", "',DATE_FORMAT(createdate,'%m'),'");
+            url.Replace("$create.day", "',DATE_FORMAT(createdate,'%d'),'");
             url.Replace("$column.dirPath", column.dirPath);
             url.Replace("$column.dirName", column.dirName);
             url.Replace("$channel.dirName", channel.dirName);
             url.Replace(".$extension", "");
-            Sql.ExecuteNonQuery("update maintable set  classId=@classId,rootId=@rootId,moduleId=@moduleId,url='" + url + "'  where id in (" + ids + ")", new MySqlParameter[] { new MySqlParameter("classId", classId), new MySqlParameter("rootId", column.rootId), new MySqlParameter("moduleId", column.moduleId) });
+            Sql.ExecuteNonQuery("update maintable set  classId=@classId,rootId=@rootId,moduleId=@moduleId, url=CONCAT('" + url + "')  where id in (" + ids + ")", new MySqlParameter[] { new MySqlParameter("classId", classId), new MySqlParameter("rootId", column.rootId), new MySqlParameter("moduleId", column.moduleId) });
 
             return info;
         }

@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Xml;
-using MySql.Data.MySqlClient;
+//using MySql.Data.MySqlClient;
 using Microsoft.AspNetCore.Http;
 using RazorEngine.Configuration;
 using RazorEngine;
@@ -431,30 +431,12 @@ namespace MWMS.Template
             StringBuilder _sql = new StringBuilder("");
             object temp_sql = addWhere;
             if (temp_sql != null) addWhere = temp_sql.ToString();
-            MySqlParameter[] sql_p = null;
-            if (p1.Count > 0)
-            {
-                sql_p = new MySqlParameter[p1.Count];
-                int i = 0;
-                foreach (DictionaryEntry item in p1)
-                {
-                    sql_p[i] = new MySqlParameter(item.Key.ToString(), item.Value);
-                    i++;
-                }
-            }
-            /*
-            _variable4_sql
-           p = new MySqlParameter[sql_p.Count];
-            for (int i = 0; i < sql_p.Count; i++)
-            {
-                p[i] = new MySqlParameter("p_" + (i + 1).ToString(), sql_p[i]);
-            }*/
-            //renderSql(ref addWhere, ref sql_p);
+
             DAL.Datatype.TableStructure tableInfo = new DAL.Datatype.TableStructure(datatypeId);
 
-            string orderByStr = "order by A.orderid desc,A.createdate desc";
-            if (orderBy == 1) orderByStr = "order by A.orderid desc,A.createdate desc";
-            else if (orderBy == 3) orderByStr = "order by A.clickcount desc";
+            string orderByStr = "A.orderid desc,A.createdate desc";
+            if (orderBy == 1) orderByStr = "A.orderid desc,A.createdate desc";
+            else if (orderBy == 3) orderByStr = "A.clickcount desc";
             bool showPic = false;
             string isPic = html.GetHTMLValue("isPic");
             if (isPic == "true" || isPic == "1") showPic = true;
@@ -501,6 +483,8 @@ namespace MWMS.Template
             string sql = "select ";
             string countSql = "select count(1) ";
             string maxSql = "select min(A.id),max(A.id) ";
+            var count_sql = DAL.DAL.M("maintable A");
+            count_sql.Field(fieldList);
             if (pageSize == 0 && recordCount > 0) { }
             else
             {
@@ -515,15 +499,21 @@ namespace MWMS.Template
             {
                 sql += " inner join " + tableInfo.TableName + " B  on A.id=B.id ";
                 countSql += " inner join " + tableInfo.TableName + " B  on A.id=B.id ";
+                count_sql.Join(tableInfo.TableName+" B", "A.id=B.id");
             }
             if (classFlag)
             {
                 sql += " inner join class C WITH(NOLOCK) on A.classId=C.id ";
                 countSql += " inner join class C WITH(NOLOCK) on A.classId=C.id ";
+                count_sql.Join("class C", "A.classId=C.id");
             }
             int pageNo = 1;
             StringBuilder where = new StringBuilder(" where  A.orderid>-1 and A.createdate<'"+DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")+"' ");
             if (showPic) where.Append(" and A.pic<>'' ");
+            count_sql.Where(new object[,] {
+                { "A.orderid",">",-1},
+                { "A.createdate","<",DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")}
+            });
             string max_where = "";
 
 
@@ -542,6 +532,9 @@ namespace MWMS.Template
                         {
                             if (attrWhere != "") attrWhere += " and ";
                             attrWhere += " A.attr" + (int.Parse(attr[nn]) - 1).ToString() + "=1";
+                            count_sql.Where(new object[,] {
+                                { "A.attr"+ (int.Parse(attr[nn]) - 1).ToString(),"=",1},
+                            });
                         }
                     }
                 }
@@ -550,35 +543,44 @@ namespace MWMS.Template
             #endregion
             if (classId > 0)
             {
-                MySqlDataReader rs2 = Sql.ExecuteReader("select rootId,childId,classId from class where  id=@id", new MySqlParameter[] { new MySqlParameter("id", classId) });
-                if (rs2.Read())
+                var column= DAL.DAL.M("class").Field("rootId,childId,classId").Get(classId);
+                if (column != null)
                 {
-                    if (rs2.GetDouble(2) == 7)//是否为频道
+                    if (column["classId"].ToDouble() == 7)//是否为频道
                     {
                         where.Append(" and A.rootId=" + classId.ToString());
                         max_where = " A.rootId=" + classId.ToString();
+                        count_sql.Where(new object[,] {
+                                { "A.rootId","=",classId},
+                            });
                     }
                     else
                     {
-                        where.Append(" and A.classId in (" + rs2[1].ToString() + ")");
-                        max_where = " A.classId in (" + rs2[1].ToString() + ")";
+                        where.Append(" and A.classId in (" + column["childId"] + ")");
+                        max_where = " A.classId in (" + column["childId"] + ")";
+                        count_sql.Where("A.classId in (" + column["childId"] + ")");
                     }
                 }
                 else
                 {
                     where.Append(" and A.classId=" + classId.ToString());
                     max_where = " A.classId=" + classId.ToString();
+                    count_sql.Where(new object[,] {
+                                { "A.classId","=",classId},
+                            });
                 }
-                rs2.Close();
             }
             else if (moduleId > 0)
             {
                 where.Append(" and A.moduleId=" + moduleId);
                 max_where = " A.moduleId=" + moduleId;
+                count_sql.Where(new object[,] {
+                                { "A.moduleId","=",moduleId},
+                            });
             }
             //Regex r1 = new Regex("{(FunctionName|FieldName)[^{]*?}");
             //MatchCollection hc = r1.Matches(template.ToString());
-
+            /*
             if (orderBy == 2)//随机查询
             {
                 string num = Regex.Replace((labelId + PageContext.Current.Request.Path).MD5(), "[A-Z]", "");
@@ -596,14 +598,15 @@ namespace MWMS.Template
                 Random rnd = new Random(int.Parse(num));
                 where.Append(" and A.id>" + (minId + rnd.Next(chazhi)).ToString());
                 orderByStr = "";
-            }
+            }*/
             if (addWhere != "") where.Append(" and " + addWhere);
+            count_sql.Where(addWhere, p1);
             ArrayList rs1 = null;
             int RC = 0;
             if (pageSize > 0)
             {
                 PageBar p = new PageBar();
-                p.RecordCount = int.Parse(Sql.ExecuteScalar(countSql + where, sql_p).ToString());
+                p.RecordCount=count_sql.Count();
                 SafeReqeust request = new SafeReqeust(0, 0);
                 pageNo = page["_pageNo"] == null ? 1 : (int)page["_pageNo"];
                 p.PageSize = pageSize;
@@ -617,35 +620,75 @@ namespace MWMS.Template
                 page["pagebar_" + labelId] = p;
                 //sql = "select top " + pageSize.ToString() + " * from (" + sql + where.ToString() + ")L where L.row_number>" + (pageSize * (pageNo - 1)).ToString();
                 sql += where +" limit "+ (pageSize * (pageNo - 1)).ToString() + ","+ pageSize.ToString();
-                //sql = sql + " where A.id in (" + tempsql + ")";
-                //sql = "select top " +pageSize.ToString() + " * from (" +
-                //sql +where+
-                //")L where L.row_number>"+(pageSize*(pageNo-1)).ToString();
-
-                //if (debug) return "调试：" + sql;
-                //rs1 = Sql.ExecuteArray(sql, sql_p);
-                //GetDataList(tableInfo, sql, sql_p);
+                count_sql.Pagination(pageSize,pageNo);
 
             }
             else
             {
                 if (recordCount == 0) recordCount = 100000;
-                sql += where +" " +orderByStr + " limit 0," + recordCount.ToString();
-               // sql += " inner join  (select top " + recordCount.ToString() + " A.id from maintable A WITH(NOLOCK) ";
-                //sql += " inner join  (select  A.id from maintable A  ";
-                //if (addWhere.IndexOf("u_") > -1) sql += " inner join " + tableInfo.TableName + " B  on A.id=B.id ";
-                //sql += where.ToString() + " " + orderByStr + ") H on A.id=H.id ";
-                //if (debug) return "调试：" + sql;
-                //rs1 = Sql.ExecuteReader(sql + where.ToString() + " " + orderByStr);
-                //rs1 = Sql.ExecuteArray(sql, sql_p);
+                sql += where +" "+ (orderBy==2?"":orderByStr) + " limit 0," + recordCount.ToString();
+                count_sql.Pagination(recordCount);
             }
+            count_sql.Order(orderByStr);
+            var _list=count_sql.Select();
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
-            List<Dictionary<string, dynamic>> list= GetDataList(tableInfo, sql, sql_p);
+            List<Dictionary<string, dynamic>> list = GetDataList(tableInfo,_list);
             sw.Stop();
             Console.WriteLine("时间为：" + sw.Elapsed.TotalMilliseconds);
             return list;
         }
+
+        static List<Dictionary<string, dynamic>> GetDataList(TableStructure table,List<Dictionary<string ,object>> _list)
+        {
+            List<Dictionary<string, dynamic>> list = new List<Dictionary<string, dynamic>>();
+            foreach(var item in _list)
+            {
+                Dictionary<string, dynamic> attr = new Dictionary<string, dynamic>();
+                foreach(var f in item)
+                {
+                    string name = f.Key;
+                    Field field = null;
+                    if (table.Fields.ContainsKey(name))
+                    {
+
+                        field = table.Fields[name];
+
+                        if (field == null)
+                        {
+                            attr[name] = f.Value;
+                        }
+                        else
+                        {
+                            attr[name] = field.Convert(f.Value, Field.ConvertType.UserData);
+                        }
+                    }
+                    else
+                    {
+
+                        if (name == "url")
+                        {
+                            string url = f.Value.ToStr();
+                            if (url.Length > 0 && url.Substring(url.Length - 1) == @"/")
+                            {
+                                attr[name] = Config.webPath + url;
+                            }
+                            else
+                            {
+                                attr[name] = Config.webPath + url + "." + BaseConfig.extension;
+                            }
+                        }
+                        else
+                        {
+                            attr[name] = f.Value;
+                        }
+                    }
+                }
+                list.Add(attr);
+            }
+            return list;
+        }
+        /*
         static List<Dictionary<string, dynamic>> GetDataList(TableStructure table, string sql, MySqlParameter[] p)
         {
             List<Dictionary<string, dynamic>> list = new List<Dictionary<string, dynamic>>();
@@ -697,7 +740,7 @@ namespace MWMS.Template
             rs.Close();
             return list;
         }
-
+        */
         /// <summary>
         /// 获取变量参数
         /// </summary>
@@ -798,16 +841,12 @@ namespace MWMS.Template
         public static List<Dictionary<string, dynamic>> getSqlLabel(string labelId, string sql, int pageSize, int recordCount, bool debug, Hashtable p1, ref Dictionary<string, object> page)
         {
 
-            MySqlParameter[] sql_p = null;
-            if (p1.Count > 0)
+
+            Dictionary<string, object> _p = new Dictionary<string, object>();
+            PageBar p = new PageBar();
+            foreach (DictionaryEntry item in p1)
             {
-                sql_p = new MySqlParameter[p1.Count];
-                int i = 0;
-                foreach (DictionaryEntry item in p1)
-                {
-                    sql_p[i] = new MySqlParameter(item.Key.ToString(), item.Value);
-                    i++;
-                }
+                _p[item.Key.ToString()] = item.Value;
             }
             //renderSql(ref sql, ref sql_p);
             int pageNo = 0;
@@ -823,11 +862,11 @@ namespace MWMS.Template
 
                 string fieldList = sql.SubString("select", "from");
                 string tempsql = sql.Substring(("select" + fieldList).Length);
-                string countSql = "select count(1) " + tempsql;
+                string countSql = "select count(1) c" + tempsql;
                 //sql = "select" + fieldList + ",row_number() OVER(order by " + (orderBy == "" ? "(select 0)" : orderBy) + ") row_number " + tempsql;
                 sql = "select" + fieldList + " " + tempsql;
-                PageBar p = new PageBar();
-                p.RecordCount = int.Parse( Sql.ExecuteScalar(countSql, sql_p).ToString());
+                p.RecordCount = DAL.DAL.ExecuteReader(countSql, _p)[0]["c"].ToInt();
+                //p.RecordCount = int.Parse( Sql.ExecuteScalar(countSql, sql_p).ToString());
                 SafeReqeust request = new SafeReqeust(0, 0);
                 pageNo = page["_pageNo"] == null ? 1 : (int)page["_pageNo"];
                 p.PageSize = pageSize;
@@ -854,7 +893,9 @@ namespace MWMS.Template
 
 
             //if (debug == "true") return "调试：" + sql;
-            return Sql.ExecuteList(sql, sql_p);
+            return DAL.DAL.ExecuteReader(sql, _p);
+            //p.RecordCount = DAL.DAL.Query(countSql, p1)[0]["c"].ToInt();
+            //return Sql.ExecuteList(sql, sql_p);
 
         }
         string buildSql(ref string str)

@@ -258,13 +258,17 @@ namespace MWMS.SqlHelper
 
         public static int ExecuteNonQuery(string commandText, Dictionary<string, object> parameterValues)
         {
-            MySqlParameter[] op = new MySqlParameter[parameterValues.Count];
-            int i = 0;
-            foreach (var item in parameterValues)
+            MySqlParameter[] op = null;
+            if (parameterValues != null)
             {
-                MySqlParameter p = new MySqlParameter(item.Key, item.Value);
-                op[i] = p;
-                i++;
+                op = new MySqlParameter[parameterValues.Count];
+                int i = 0;
+                foreach (var item in parameterValues)
+                {
+                    MySqlParameter p = new MySqlParameter(item.Key, item.Value);
+                    op[i] = p;
+                    i++;
+                }
             }
             using (MySqlConnection cn = new MySqlConnection(connectionString))
             {
@@ -954,14 +958,26 @@ namespace MWMS.SqlHelper
             rs.Close();
             return arrayList;
         }
+        public static MySqlParameter [] GetParameter(Dictionary<string, object> p)
+        {
+            MySqlParameter[] _p = new MySqlParameter[p.Count];
+            int i1 = 0;
+            foreach (var value in p)
+            {
+                _p[i1] = new MySqlParameter(value.Key, value.Value);
+                i1++;
+            }
+            return _p;
+        }
         public static Dictionary<string, object> ExecuteDictionary(string commandText, MySqlParameter[] p)
         {
-            Dictionary<string, object> dictionary = new Dictionary<string, object>();
+            Dictionary<string, object> dictionary = null;
 
             ArrayList arrayList = new ArrayList();
             MySqlDataReader rs = ExecuteReader(commandText, p);
             if (rs.Read())
             {
+                dictionary = new Dictionary<string, object>();
                 for (int i = 0; i < rs.FieldCount; i++)
                 {
                     dictionary.Add(rs.GetName(i), rs[i]);

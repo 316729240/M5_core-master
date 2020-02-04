@@ -101,8 +101,7 @@ namespace M5.Main.Manager
             bool isMobilePage = false;
             string virtualWebDir = "";
             string newUrl = WebService.urlZhuanyi(new Uri(url), ref isMobilePage, ref virtualWebDir);
-            TemplateInfo v = TemplateClass.get(newUrl, isMobilePage);
-
+            PageTemplate v =new  PageTemplate(newUrl, isMobilePage);
             //ColumnInfo column = null;
             double moduleId = 0, classId = 0;
             if (v == null)
@@ -112,15 +111,15 @@ namespace M5.Main.Manager
             }
             else
             {
-                if (v.classId > 0)
+                if (v.ColumnId > 0)
                 {
-                    object value = Sql.ExecuteScalar("select id from module where id=@id", new MySqlParameter[] { new MySqlParameter("id", v.classId) });
+                    object value = Sql.ExecuteScalar("select id from module where id=@id", new MySqlParameter[] { new MySqlParameter("id", v.ColumnId) });
                     if (value == null)
                     {
-                        IDataReader rs = Sql.ExecuteReader("select id,moduleId from class where id=@id", new MySqlParameter[] { new MySqlParameter("id", v.classId) });
+                        IDataReader rs = Sql.ExecuteReader("select id,moduleId from class where id=@id", new MySqlParameter[] { new MySqlParameter("id", v.ColumnId) });
                         if (rs.Read())
                         {
-                            classId = v.classId;
+                            classId = v.ColumnId;
                             moduleId = rs.GetDouble(1);
                         }
                         rs.Close();
@@ -131,7 +130,7 @@ namespace M5.Main.Manager
                         classId = 1;
                     }
                 }
-                object[] obj = new object[] { moduleId, classId, v.u_type, v.id, isMobilePage ? 1 : 0 };
+                object[] obj = new object[] { moduleId, classId, v.TemplateType, v.TemplateId, isMobilePage ? 1 : 0 };
                 info.userData = obj;
             }
             return info;

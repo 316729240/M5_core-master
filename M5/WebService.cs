@@ -66,7 +66,7 @@ namespace M5.Main
         }
         public void BeginRequest(HttpContext context)
         {
-               HttpRequest Request = context.Request;
+            HttpRequest Request = context.Request;
             HttpResponse Response = context.Response;
             if (!allowAccessManagementIP(Request)) Page.ERR404("非法访问");
             /*#region 非系统网页扩展名时处理方式(非文件跳转目录否则不再处理)
@@ -91,11 +91,18 @@ namespace M5.Main
             */
 
             injection(Request);//注入过滤
+            try
+            {
                 string html = RewriteUrl(context);//载入映射规则
                                                   //Response.ContentType = "html/plain; charset="+System.Text.Encoding.Default.HeaderName;
                 if (html != null) Response.WriteAsync(html);
 
-
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("页面异常："+ex.Message+"\r\n"+ex.StackTrace);
+                Response.WriteAsync(ex.Message);
+            }
 
 
         }
@@ -228,6 +235,7 @@ namespace M5.Main
             HttpResponse response = context.Response;
             System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
             sw.Start();
+            Console.WriteLine(request.Url());
             #region 已存在文件处理方式
             string file = request.Path;
             if (file.Substring(file.Length - 1) == "/") file += "index." + BaseConfig.extension;
@@ -296,22 +304,9 @@ namespace M5.Main
             if(!isLogin) html=pageCache.Get(newUrl);
             if (html==null)
             {
-                try
-                {
                     html = getHtml(request, virtualWebDir, newUrl, isMobilePage);
                     pageCache.Set(newUrl, html);
-                }
-                catch (Exception ex)
-                {
-                    if (isLogin)
-                    {
-                        html = ex.Message;
-                    }
-                    else
-                    {
-                        html = pageCache.Get(newUrl);
-                    }
-                }
+                
             }
             return html;
             /*

@@ -54,7 +54,7 @@ namespace M5.Main.Manager
         {
             ReturnValue returnValue = new ReturnValue();
             Dictionary<string, object> data = table.GetModel(id);
-            data["url"] = TemplateEngine._replaceUrl(Config.webPath + data["url"].ToString() + "." + BaseConfig.extension);
+            data["url"] = Config.webPath + data["url"].ToString() + "." + BaseConfig.extension;// MWMS.Template.BuildCode._replaceUrl(Config.webPath + data["url"].ToString() + "." + BaseConfig.extension,false,false);
             returnValue.userData = data;
             return returnValue;
         }
